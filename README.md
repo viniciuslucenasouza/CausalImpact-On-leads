@@ -1,27 +1,20 @@
----
-title: "CausalImpact"
-author: "Vinicius Lucena"
-date: "29 de outubro de 2018"
-output: html_document
----
-
 # Intro
 
-Esse markdown tem como objetico apresentar um estudo de caso para o uso da ferramenta CausalImpact [Pacote do Google (para mais informaÁıes)](https://google.github.io/CausalImpact/CausalImpact.html) feito em um determinado produto em um grande instituiÁ„o financeira. A idÈia È validar a usabilidade da ferramenta (R) com a ferramenta do GooglAnalytics para cen·rios onde n„o for possÌvel uso de teste A/B tradicional e mais importante, podendo fazer uso como indicador de performance.
+Esse markdown tem como objetico apresentar um estudo de caso para o uso da ferramenta CausalImpact [Pacote do Google (para mais informa√ß√µes)](https://google.github.io/CausalImpact/CausalImpact.html) feito em um determinado produto em um grande institui√ß√£o financeira. A id√©ia √© validar a usabilidade da ferramenta (R) com a ferramenta do GooglAnalytics para cen√°rios onde n√£o for poss√≠vel uso de teste A/B tradicional e mais importante, podendo fazer uso como indicador de performance.
 
 ## Sobre o modelo
 
-Para a modelagem do pÛs-perÌodo, usamos como treinamento o perÌodo de 35 dias de dados temporais retirados da ferramenta GoogleAnalytics que se referem a p·gina de meta (o arquivo encontra-se no repositorio/files/analitics.xlsx e foi alterado para preservar a fonte), isto È onde inicia o fluxo de contrataÁ„o do produto de interesse. A funÁ„o forecast HoltWinters foi escolhida para nosso artigo e usamos de tratamento orientado a objeto para retirar o modelo (linha tracejada prÈ-perÌodo, como veremos) e tambÈm a prediÁ„o pÛs-perÌodo que teria acontecido, como controle do modelo no uso da ferramenta CausalImpact. Assim o modelo para inferÍncia, temos grande ganho no uso de Modelo de espaÁo de estado de suavizaÁ„o exponencial.
+Para a modelagem do p√≥s-per√≠odo, usamos como treinamento o per√≠odo de 35 dias de dados temporais retirados da ferramenta GoogleAnalytics que se referem a p√°gina de meta (o arquivo encontra-se no repositorio/files/analitics.xlsx e foi alterado para preservar a fonte), isto √© onde inicia o fluxo de contrata√ß√£o do produto de interesse. A fun√ß√£o forecast HoltWinters foi escolhida para nosso artigo e usamos de tratamento orientado a objeto para retirar o modelo (linha tracejada pr√©-per√≠odo, como veremos) e tamb√©m a predi√ß√£o p√≥s-per√≠odo que teria acontecido, como controle do modelo no uso da ferramenta CausalImpact. Assim o modelo para infer√™ncia, temos grande ganho no uso de Modelo de espa√ßo de estado de suaviza√ß√£o exponencial.
 
 ## Sobre o fluxo
 
-Para a maioria dos produtos da instituiÁ„o, h· v·rios meios de captaÁ„o de clientes. PorÈm para os produtos digitais, h· varias campanhas ou meios atÈ inicio de funil. Todos os meios (seja pela homepage, pagina do produto, adwords, instagram ou qualquer outra mÌdia acaba na p·gina analisada).  
+Para a maioria dos produtos da institui√ß√£o, h√° v√°rios meios de capta√ß√£o de clientes. Por√©m para os produtos digitais, h√° varias campanhas ou meios at√© inicio de funil. Todos os meios (seja pela homepage, pagina do produto, adwords, instagram ou qualquer outra m√≠dia acaba na p√°gina analisada).  
 
-Em tempos em tempos h· uma alavancagem por meio de promoÁ„o por campanhas com homepage dedicada. E È nesse ponto que vamos explorar a p·gina de inÌcio de funil, examinando o aumento de fluxo e estimar de maneira sÛlida a melhora dado o inÌcio dessa campanha. 
+Em tempos em tempos h√° uma alavancagem por meio de promo√ß√£o por campanhas com homepage dedicada. E √© nesse ponto que vamos explorar a p√°gina de in√≠cio de funil, examinando o aumento de fluxo e estimar de maneira s√≥lida a melhora dado o in√≠cio dessa campanha. 
 
 # Modelagem
 
-O relatÛrio do vindo do googleanalytics geralmente È exportado como .csv ou .xlsx, nesse caso temos um arquivo xlsx 
+O relat√≥rio do vindo do googleanalytics geralmente √© exportado como .csv ou .xlsx, nesse caso temos um arquivo xlsx 
 
 ```{r}
 
@@ -30,7 +23,7 @@ library(dplyr)
 
 
 #Leitura Dados GA
-#Os dados vem do relatorio manual do GA de um perÌodo escolhido
+#Os dados vem do relatorio manual do GA de um per√≠odo escolhido
 campanha <- read_excel("files/analytics.xlsx")
 
 head(campanha)
@@ -39,35 +32,35 @@ head(campanha)
 ```{r }
 #Tratamento dos dados
 
-dados <- dplyr::select(campanha, Data, "VisualizaÁıes de p·ginas ˙nicas")
+dados <- dplyr::select(campanha, Data, "Visualiza√ß√µes de p√°ginas √∫nicas")
 nlinhas <- nrow(dados)-1
 dados <- dados[1:nlinhas,]
 ```
 
-Para esse modelo, È importante termos o prÈ-periodo que s„o os dados atÈ o inÌcio da campanha.
+Para esse modelo, √© importante termos o pr√©-periodo que s√£o os dados at√© o in√≠cio da campanha.
 ``` {r }
 
-#Criamos os dados do perÌodo prÈ campanha para nosso modelo
-pre.periodo <- data.frame(dados$`VisualizaÁıes de p·ginas ˙nicas`[1:37])
+#Criamos os dados do per√≠odo pr√© campanha para nosso modelo
+pre.periodo <- data.frame(dados$`Visualiza√ß√µes de p√°ginas √∫nicas`[1:37])
 
 ``` 
 
-Assim podemos ver como È o comportamento dos clientes na p·gina de inÌcio de funil. Notamos aqui um problema de frequÍncia na segunda semana. Esse problema especÌfico se deu a um erro de configuraÁ„o durante o perÌodo.
+Assim podemos ver como √© o comportamento dos clientes na p√°gina de in√≠cio de funil. Notamos aqui um problema de frequ√™ncia na segunda semana. Esse problema espec√≠fico se deu a um erro de configura√ß√£o durante o per√≠odo.
 ``` {r }
 #Transformamos em time-series
 nts <- ts(pre.periodo, frequency = 7)
 plot(nts)
 ```
 
-Assim, usamos o pacote holtwinters para modelar nossa pequena sÈrie, vemos aqui o fit tem grande influencia pelo perÌodo da segunda semana.
+Assim, usamos o pacote holtwinters para modelar nossa pequena s√©rie, vemos aqui o fit tem grande influencia pelo per√≠odo da segunda semana.
 ``` {r }
-#Fazemos o modelo mais simples possÌvel, porÈm devemos usar o alpha e gama.
-#Pois o smooth È bom
+#Fazemos o modelo mais simples poss√≠vel, por√©m devemos usar o alpha e gama.
+#Pois o smooth √© bom
 fit <- HoltWinters(nts)
 plot(fit)
 ```
 
-Assim, podemos usar o pacote forecast e usar os par‚metros de nosso modelo holtwinters. Selecionamos o tamanho do perÌodo da campanha, que durou 23 dias.
+Assim, podemos usar o pacote forecast e usar os par√¢metros de nosso modelo holtwinters. Selecionamos o tamanho do per√≠odo da campanha, que durou 23 dias.
 ``` {r}
 ## Cria o Modelo ##
 library(forecast)
@@ -78,7 +71,7 @@ plot (forecast(HoltWinters(nts), 23))
 ```
 
 
-Ent„o usamos os dados de forecast para completar nossa sÈrie temporal.
+Ent√£o usamos os dados de forecast para completar nossa s√©rie temporal.
 ``` {r}
 #o mesmo que modelo
 dados.forecast <- forecast(HoltWinters(nts),16)
@@ -95,9 +88,9 @@ x1 <- append(fit$fitted[,1], modelo$mean)
 plot(ts(x1))
 ```
 
-E tambÈm temos os dados reais do perÌodo. Visivelmente notamos o aumento na p·gina de inÌcio de funil de vendas. Em seguida transformamos em matriz, pois o modelo exige esse formato.
+E tamb√©m temos os dados reais do per√≠odo. Visivelmente notamos o aumento na p√°gina de in√≠cio de funil de vendas. Em seguida transformamos em matriz, pois o modelo exige esse formato.
 ```{r}
-y <- dados$`VisualizaÁıes de p·ginas ˙nicas`
+y <- dados$`Visualiza√ß√µes de p√°ginas √∫nicas`
 plot(ts(y))
 #Consolida as duas ts
 dados_final <- data.frame(y,x1);
@@ -118,9 +111,9 @@ impact <- CausalImpact(dados_final, pre.period, post.period)
 plot(impact)
 ```
 
-Como vemos acima, o nosso modelo (tracejado) tem menor erro nas datas prÛximas ao inÌcio da campanha, pelo fato de estar mais afastado ao perÌodo de erro de mediÁ„o.
+Como vemos acima, o nosso modelo (tracejado) tem menor erro nas datas pr√≥ximas ao in√≠cio da campanha, pelo fato de estar mais afastado ao per√≠odo de erro de medi√ß√£o.
 
-De maneira mais explÌcita, o pacote nos permite ver as mÈtrica e ainda exporta um relatÛrio robusto sobre os resultados. Onde o que importa a nÛs È o efeito relativo.
+De maneira mais expl√≠cita, o pacote nos permite ver as m√©trica e ainda exporta um relat√≥rio robusto sobre os resultados. Onde o que importa a n√≥s √© o efeito relativo.
 
 ```{r}
 summary(impact)
@@ -131,11 +124,11 @@ Como mencionado:
 summary(impact, "report")
 ```
 
-# Conclus„o
+# Conclus√£o
 
-Vemos que o report fornecido complementa a an·lise significativamente e traz as com rigor o resultado. Complementamos ainda com os resultados divulgados oficialmente para o produto que estudamos, resultantes da p·gina da campanha publicit·ria. Onde foram designados exatamente 406 leads para o inÌcio do fluxo de contrataÁ„o. 
+Vemos que o report fornecido complementa a an√°lise significativamente e traz as com rigor o resultado. Complementamos ainda com os resultados divulgados oficialmente para o produto que estudamos, resultantes da p√°gina da campanha publicit√°ria. Onde foram designados exatamente 406 leads para o in√≠cio do fluxo de contrata√ß√£o. 
 
-Como o nosso modelo n„o possui dados de lead da p·gina da campanha, podemos fazer a an·lise comparativa como validaÁ„o e nesse ponto essa abordagem foi muito boa usando apenas a mÈdia do forecast. 
+Como o nosso modelo n√£o possui dados de lead da p√°gina da campanha, podemos fazer a an√°lise comparativa como valida√ß√£o e nesse ponto essa abordagem foi muito boa usando apenas a m√©dia do forecast. 
 
-VocÍ percebe que temos um grande n˙mero de vari·veis criadas nesse artigo. N„o È necess·rio, mas o recurso foi utilizado para ficar mais did·tico; 
+Voc√™ percebe que temos um grande n√∫mero de vari√°veis criadas nesse artigo. N√£o √© necess√°rio, mas o recurso foi utilizado para ficar mais did√°tico; 
 
